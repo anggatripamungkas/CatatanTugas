@@ -49,11 +49,6 @@ class _TugasListPageState extends State<TugasListPage> {
     });
   }
 
-  void _saveUserName(String name) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.setString('userName', name);
-  }
-
   void _loadTugas() async {
     final data = await _dbHelper.getAllTugas();
     setState(() {
@@ -109,6 +104,11 @@ class _TugasListPageState extends State<TugasListPage> {
         );
       },
     );
+  }
+
+  void _saveUserName(String name) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.setString('userName', name);
   }
 
   void _addOrUpdateTugas({Tugas? tugas}) async {
@@ -241,6 +241,60 @@ class _TugasListPageState extends State<TugasListPage> {
     }
   }
 
+  void _deleteCompletedTugas() async {
+    final completedTugas = _tugasList.where((tugas) => tugas.isSelesai).toList();
+
+    if (completedTugas.isNotEmpty) {
+      // Menyusun daftar mata kuliah yang akan dihapus
+      String mataKuliahListText = completedTugas
+          .map((tugas) => '- ${tugas.mataKuliah}')
+          .join('\n');
+
+      bool? confirmDelete = await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Konfirmasi Hapus Semua Tugas Selesai'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Berikut adalah mata kuliah yang akan dihapus:'),
+                SizedBox(height: 10),
+                Text(mataKuliahListText), // Menampilkan daftar mata kuliah yang akan dihapus
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Batal'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Hapus'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirmDelete == true) {
+        // Menghapus tugas yang sudah selesai
+        for (var tugas in completedTugas) {
+          await _dbHelper.deleteTugas(tugas.id!);
+        }
+        _loadTugas();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Mata kuliah yang sudah selesai dihapus')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tidak ada tugas yang selesai')),
+      );
+    }
+  }
+
   void _viewDetailTugas(Tugas tugas) {
     Navigator.push(
       context,
@@ -351,6 +405,20 @@ class _TugasListPageState extends State<TugasListPage> {
                     ),
                   );
                 },
+              ),
+            ),
+            // Tombol untuk menghapus tugas selesai
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: ElevatedButton(
+                onPressed: _deleteCompletedTugas,
+                child: const Text('Hapus Semua Tugas Selesai'),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  backgroundColor: Colors.grey.withOpacity(0.5), // Mengatur latar belakang abu-abu transparan
+                  foregroundColor: Colors.white, // Mengatur warna font menjadi putih
+                  textStyle: const TextStyle(fontSize: 18),
+                ),
               ),
             ),
           ],
