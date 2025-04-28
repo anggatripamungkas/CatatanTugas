@@ -1,0 +1,30 @@
+name: catatan_tugas
+description: "Aplikasi Catatan untuk Tugas."
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: ^3.5.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.2.0
+  path: ^1.8.3
+  shared_preferences: ^2.0.15  # Pastikan menggunakan versi terbaru
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.2
+  flutter_native_splash: ^2.2.19
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "lib/catatan.png"  # Ganti dengan path ikon Anda
+  remove_alpha_ios: true
+
+flutter:
+  uses-material-design: true
